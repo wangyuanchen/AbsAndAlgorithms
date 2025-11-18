@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { FaGithub } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
-import { Loader2, TriangleAlert } from "lucide-react";
+import { Loader2, TriangleAlert, Apple, Dumbbell } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
 import { Input } from "@/components/ui/input";
@@ -15,8 +13,6 @@ import { Card, CardTitle, CardHeader, CardContent, CardDescription } from "@/com
 
 export const SignInCard = () => {
   const [loading, setLoading] = useState(false);
-  const [loadingGithub, setLoadingGithub] = useState(false);
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingLogin, setLoadingLogin] = useState(false);
 
   const [email, setEmail] = useState("");
@@ -37,19 +33,15 @@ export const SignInCard = () => {
     });
   };
 
-  const onProviderSignIn = (provider: "github" | "google") => {
-    setLoading(true);
-    setLoadingGithub(provider === "github");
-    setLoadingGoogle(provider === "google");
-
-    signIn(provider, { callbackUrl: "/" });
-  };
-
   return (
-    <Card className="w-full h-full p-8">
+    <Card className="w-full h-full p-8 bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
       <CardHeader className="px-0 pt-0">
-        <CardTitle>Login to continue</CardTitle>
-        <CardDescription>Use your email or another service to continue</CardDescription>
+        <div className="flex items-center gap-2 mb-2">
+          <Dumbbell className="size-8 text-green-600" />
+          <Apple className="size-8 text-green-600" />
+        </div>
+        <CardTitle className="text-3xl font-bold text-green-800">Welcome Back to FitMenu</CardTitle>
+        <CardDescription className="text-green-700">Log in to access your personalized fitness nutrition plans</CardDescription>
       </CardHeader>
       {!!error && (
         <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive mb-6">
@@ -75,49 +67,18 @@ export const SignInCard = () => {
             disabled={loading || loadingLogin}
             required
           />
-          <Button className="w-full" type="submit" size="lg" disabled={loading}>
+          <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold" type="submit" size="lg" disabled={loading}>
             {loadingLogin ? (
               <Loader2 className="mr-2 size-5 top-2.5 left-2.5 animate-spin" />
             ) : (
-              "Continue"
+              "Start Your Fitness Journey"
             )}
           </Button>
         </form>
-        <Separator />
-        <div className="flex flex-col gap-y-2.5">
-          <Button
-            onClick={() => onProviderSignIn("google")}
-            size="lg"
-            variant="outline"
-            className="w-full relative"
-            disabled={loading}
-          >
-            {loadingGoogle ? (
-              <Loader2 className="mr-2 size-5 top-2.5 left-2.5 absolute animate-spin" />
-            ) : (
-              <FcGoogle className="mr-2 size-5 top-2.5 left-2.5 absolute" />
-            )}
-            Continue with Google
-          </Button>
-          <Button
-            onClick={() => onProviderSignIn("github")}
-            size="lg"
-            variant="outline"
-            disabled={loading}
-            className="w-full relative"
-          >
-            {loadingGithub ? (
-              <Loader2 className="mr-2 size-5 top-2.5 left-2.5 absolute animate-spin" />
-            ) : (
-              <FaGithub className="mr-2 size-5 top-2.5 left-2.5 absolute" />
-            )}
-            Continue with Github
-          </Button>
-        </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-green-700">
           Don&apos;t have an account?{" "}
           <Link href="/sign-up" onClick={() => setLoading(true)}>
-            <span className="text-sky-700 hover:underline">Sign up</span>
+            <span className="text-green-600 font-semibold hover:underline">Join FitMenu Today</span>
           </Link>
         </p>
       </CardContent>

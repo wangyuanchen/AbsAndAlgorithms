@@ -3,35 +3,22 @@
 import Link from "next/link";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { FaGithub } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
-import { Loader2, TriangleAlert } from "lucide-react";
+import { Loader2, TriangleAlert, Apple, Dumbbell } from "lucide-react";
 
 import { useSignUp } from "@/features/auth/hooks/use-sign-up";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Card, CardTitle, CardHeader, CardContent, CardDescription } from "@/components/ui/card";
 
 export const SignUpCard = () => {
   const [loading, setLoading] = useState(false);
-  const [loadingGithub, setLoadingGithub] = useState(false);
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
 
   const mutation = useSignUp();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const onProviderSignUp = (provider: "github" | "google") => {
-    setLoading(true);
-    setLoadingGithub(provider === "github");
-    setLoadingGoogle(provider === "google");
-
-    signIn(provider, { callbackUrl: "/" });
-  };
 
   const onCredentialSignUp = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -56,10 +43,14 @@ export const SignUpCard = () => {
   };
 
   return (
-    <Card className="w-full h-full p-8">
+    <Card className="w-full h-full p-8 bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
       <CardHeader className="px-0 pt-0">
-        <CardTitle>Create an account</CardTitle>
-        <CardDescription>Use your email or another service to continue</CardDescription>
+        <div className="flex items-center gap-2 mb-2">
+          <Dumbbell className="size-8 text-green-600" />
+          <Apple className="size-8 text-green-600" />
+        </div>
+        <CardTitle className="text-3xl font-bold text-green-800">Join FitMenu</CardTitle>
+        <CardDescription className="text-green-700">Start your personalized fitness nutrition journey today</CardDescription>
       </CardHeader>
       {!!mutation.error && (
         <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive mb-6">
@@ -96,7 +87,7 @@ export const SignUpCard = () => {
             maxLength={20}
           />
           <Button
-            className="w-full"
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
             type="submit"
             size="lg"
             disabled={loading || mutation.isPending}
@@ -104,45 +95,14 @@ export const SignUpCard = () => {
             {mutation.isPending ? (
               <Loader2 className="mr-2 size-5 top-2.5 left-2.5 animate-spin" />
             ) : (
-              "Continue"
+              "Create My FitMenu Account"
             )}
           </Button>
         </form>
-        <Separator />
-        <div className="flex flex-col gap-y-2.5">
-          <Button
-            disabled={mutation.isPending || loading}
-            onClick={() => onProviderSignUp("google")}
-            variant="outline"
-            size="lg"
-            className="w-full relative"
-          >
-            {loadingGoogle ? (
-              <Loader2 className="mr-2 size-5 top-2.5 left-2.5 absolute animate-spin" />
-            ) : (
-              <FcGoogle className="mr-2 size-5 top-2.5 left-2.5 absolute" />
-            )}
-            Continue with Google
-          </Button>
-          <Button
-            disabled={mutation.isPending || loading}
-            onClick={() => onProviderSignUp("github")}
-            variant="outline"
-            size="lg"
-            className="w-full relative"
-          >
-            {loadingGithub ? (
-              <Loader2 className="mr-2 size-5 top-2.5 left-2.5 absolute animate-spin" />
-            ) : (
-              <FaGithub className="mr-2 size-5 top-2.5 left-2.5 absolute" />
-            )}
-            Continue with Github
-          </Button>
-        </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-green-700">
           Already have an account?{" "}
           <Link href="/sign-in" onClick={() => setLoading(true)}>
-            <span className="text-sky-700 hover:underline">Sign in</span>
+            <span className="text-green-600 font-semibold hover:underline">Sign in to FitMenu</span>
           </Link>
         </p>
       </CardContent>

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
 import { eq } from "drizzle-orm";
 import { JWT } from "next-auth/jwt";
@@ -56,7 +55,8 @@ export default {
           return null;
         }
 
-        const passwordsMatch = await bcrypt.compare(
+        const bcrypt = await import("bcryptjs");
+        const passwordsMatch = await bcrypt.default.compare(
           password,
           user.password,
         );
@@ -67,9 +67,9 @@ export default {
 
         return user;
       },
-    }), 
-    GitHub, 
-    Google
+    }),
+    ...(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET ? [GitHub] : []),
+    ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET ? [Google] : []),
   ],
   pages: {
     signIn: "/sign-in",

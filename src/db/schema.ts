@@ -121,7 +121,7 @@ export const projectsRelations = relations(projects, ({ one }) => ({
 
 export const projectsInsertSchema = createInsertSchema(projects);
 
-export const subscriptions = pgTable("subscription", {
+export const menus = pgTable("menu", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -130,11 +130,46 @@ export const subscriptions = pgTable("subscription", {
     .references(() => users.id, {
       onDelete: "cascade"
     }),
-  subscriptionId: text("subscriptionId").notNull(),
-  customerId: text("customerId").notNull(),
-  priceId: text("priceId").notNull(),
-  status: text("status").notNull(),
-  currentPeriodEnd: timestamp("currentPeriodEnd", { mode: "date" }),
+  name: text("name").notNull(),
+  ingredients: text("ingredients").notNull(), // JSON string of ingredients
+  protein: integer("protein").notNull(), // grams
+  carbs: integer("carbs").notNull(), // grams
+  fat: integer("fat").notNull(), // grams
+  calories: integer("calories").notNull(),
   createdAt: timestamp("createdAt", { mode: "date" }).notNull(),
   updatedAt: timestamp("updatedAt", { mode: "date" }).notNull(),
 });
+
+export const recipes = pgTable("recipe", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  menuId: text("menuId")
+    .notNull()
+    .references(() => menus.id, {
+      onDelete: "cascade"
+    }),
+  name: text("name").notNull(),
+  instructions: text("instructions").notNull(), // JSON array of steps
+  ingredients: text("ingredients").notNull(), // JSON array of ingredients with quantities
+  prepTime: integer("prepTime").notNull(), // minutes
+  cookTime: integer("cookTime").notNull(), // minutes
+  servings: integer("servings").notNull(),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull(),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).notNull(),
+});
+
+export const menusRelations = relations(menus, ({ one, many }) => ({
+  user: one(users, {
+    fields: [menus.userId],
+    references: [users.id],
+  }),
+  recipes: many(recipes),
+}));
+
+export const recipesRelations = relations(recipes, ({ one }) => ({
+  menu: one(menus, {
+    fields: [recipes.menuId],
+    references: [menus.id],
+  }),
+}));
