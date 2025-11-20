@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
+import Script from "next/script";
 
 import { auth } from "@/auth";
 import { Modals } from "@/components/modals";
@@ -12,8 +13,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "The Canvas",
-  description: "Build Something Great!",
+  title: "FitMenu AI - Personalized Fitness Nutrition Plans",
+  description: "Generate personalized fitness and weight loss nutrition plans with AI. Custom macros, meal planning, and healthy recipes.",
 };
 
 export default async function RootLayout({
@@ -26,6 +27,16 @@ export default async function RootLayout({
   return (
     <SessionProvider session={session}>
       <html lang="en">
+        <head>
+          {process.env.NEXT_PUBLIC_ADSENSE_ID && (
+            <Script
+              async
+              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_ID}`}
+              crossOrigin="anonymous"
+              strategy="afterInteractive"
+            />
+          )}
+        </head>
         <body className={inter.className}>
           <Providers>
             <Toaster />

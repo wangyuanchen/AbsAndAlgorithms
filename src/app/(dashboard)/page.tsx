@@ -1,4 +1,5 @@
 import { protectServer } from "@/features/auth/utils";
+import { AdSenseAd } from "@/components/adsense-ad";
 
 import { MenusSection } from "./menus-section";
 
@@ -33,7 +34,22 @@ export default async function Home() {
           </div>
         </div>
       </div>
+      
+      {/* AdSense Ad - Top Banner */}
+      <AdSenseAd 
+        adSlot="YOUR_AD_SLOT_ID_1" 
+        adFormat="auto"
+        className="my-4"
+      />
+      
       <MenusSection />
+      
+      {/* AdSense Ad - Bottom Banner */}
+      <AdSenseAd 
+        adSlot="YOUR_AD_SLOT_ID_2" 
+        adFormat="auto"
+        className="my-4"
+      />
     </div>
   );
 };
