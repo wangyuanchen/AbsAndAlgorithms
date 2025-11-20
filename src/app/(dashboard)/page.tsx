@@ -37,7 +37,7 @@ export default async function Home() {
       
       {/* AdSense Ad - Top Banner */}
       <AdSenseAd 
-        adSlot="YOUR_AD_SLOT_ID_1" 
+        adSlot="6048872360" 
         adFormat="auto"
         className="my-4"
       />
@@ -46,7 +46,7 @@ export default async function Home() {
       
       {/* AdSense Ad - Bottom Banner */}
       <AdSenseAd 
-        adSlot="YOUR_AD_SLOT_ID_2" 
+        adSlot="4534263102" 
         adFormat="auto"
         className="my-4"
       />

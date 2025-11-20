@@ -6,7 +6,7 @@ export default function MenusPage() {
     <div className="container py-8 space-y-6">
       {/* AdSense Ad - Top */}
       <AdSenseAd 
-        adSlot="YOUR_AD_SLOT_ID_3" 
+        adSlot="4240966673" 
         adFormat="horizontal"
         className="mb-6"
       />
@@ -15,7 +15,7 @@ export default function MenusPage() {
       
       {/* AdSense Ad - Bottom */}
       <AdSenseAd 
-        adSlot="YOUR_AD_SLOT_ID_4" 
+        adSlot="8688188589" 
         adFormat="auto"
         className="mt-6"
       />
