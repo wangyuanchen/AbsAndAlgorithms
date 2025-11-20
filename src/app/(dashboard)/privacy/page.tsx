@@ -128,7 +128,7 @@ export default async function PrivacyPage() {
             If you have any questions about this Privacy Policy or how we handle your data, please contact us:
           </p>
           <p className="text-green-700 font-medium">
-            Email: <a href="mailto:privacy@fitmenu-ai.com" className="underline hover:text-green-600">privacy@fitmenu-ai.com</a>
+            Email: <a href="mailto:pgr.sen@gmail.com" className="underline hover:text-green-600">pgr.sen@gmail.com</a>
           </p>
         </section>
       </div>

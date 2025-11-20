@@ -23,7 +23,7 @@ export const SidebarRoutes = () => {
         <SidebarItem href="/about" icon={Info} label="About" isActive={pathname === "/about"} />
         <SidebarItem href="/privacy" icon={Shield} label="Privacy Policy" isActive={pathname === "/privacy"} />
         <SidebarItem
-          href="mailto:support@fitmenu-ai.com"
+          href="mailto:pgr.sen@gmail.com"
           icon={MessageCircleQuestion}
           label="Get Help"
         />

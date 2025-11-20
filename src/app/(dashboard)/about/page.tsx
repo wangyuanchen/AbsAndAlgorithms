@@ -97,7 +97,7 @@ export default async function AboutPage() {
             Have questions or suggestions? We&apos;d love to hear from you!
           </p>
           <p className="text-green-700 font-medium">
-            Email: <a href="mailto:support@fitmenu-ai.com" className="underline hover:text-green-600">support@fitmenu-ai.com</a>
+            Email: <a href="mailto:pgr.sen@gmail.com" className="underline hover:text-green-600">pgr.sen@gmail.com</a>
           </p>
         </section>
       </div>
