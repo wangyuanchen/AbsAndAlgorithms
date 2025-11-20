@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, MessageCircleQuestion, Utensils } from "lucide-react";
+import { Home, MessageCircleQuestion, Utensils, Info, Shield } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { Separator } from "@/components/ui/separator";
@@ -20,8 +20,10 @@ export const SidebarRoutes = () => {
         <Separator />
       </div>
       <ul className="flex flex-col gap-y-1 px-3">
+        <SidebarItem href="/about" icon={Info} label="About" isActive={pathname === "/about"} />
+        <SidebarItem href="/privacy" icon={Shield} label="Privacy Policy" isActive={pathname === "/privacy"} />
         <SidebarItem
-          href="mailto:support@example.com"
+          href="mailto:support@fitmenu-ai.com"
           icon={MessageCircleQuestion}
           label="Get Help"
         />
