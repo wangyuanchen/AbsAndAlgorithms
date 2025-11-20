@@ -8,52 +8,52 @@ export const azureOpenAI = new AzureOpenAI({
 });
 
 export const generateMenuWithAI = async (ingredients: string) => {
-  const prompt = `你是一位专业的营养师和健身教练。根据以下食材，生成一份健康的健身减脂菜单。
+  const prompt = `You are a professional nutritionist and fitness coach. Based on the following ingredients, generate a healthy fitness and weight loss menu.
 
-食材: ${ingredients}
+Ingredients: ${ingredients}
 
-请生成一份包含以下信息的菜单:
-1. 菜单名称
-2. 总营养成分 (蛋白质/克, 碳水化合物/克, 脂肪/克, 总卡路里)
-3. 2-3道菜的详细食谱，每道菜包括:
-   - 菜名
-   - 所需食材及用量
-   - 烹饪步骤
-   - 准备时间(分钟)
-   - 烹饪时间(分钟)
-   - 份数
+Please generate a menu with the following information:
+1. Menu name
+2. Total nutrition (protein/g, carbs/g, fat/g, total calories)
+3. 2-3 detailed recipes, each including:
+   - Recipe name
+   - Required ingredients with quantities
+   - Cooking steps
+   - Prep time (minutes)
+   - Cook time (minutes)
+   - Servings
 
-请以 JSON 格式返回，格式如下:
+Return in JSON format as follows:
 {
-  "menuName": "菜单名称",
+  "menuName": "Menu Name",
   "nutrition": {
-    "protein": 数字,
-    "carbs": 数字,
-    "fat": 数字,
-    "calories": 数字
+    "protein": number,
+    "carbs": number,
+    "fat": number,
+    "calories": number
   },
   "recipes": [
     {
-      "name": "菜名",
+      "name": "Recipe Name",
       "ingredients": [
-        {"name": "食材名", "quantity": "用量"}
+        {"name": "Ingredient Name", "quantity": "Amount"}
       ],
-      "instructions": ["步骤1", "步骤2"],
-      "prepTime": 数字,
-      "cookTime": 数字,
-      "servings": 数字
+      "instructions": ["Step 1", "Step 2"],
+      "prepTime": number,
+      "cookTime": number,
+      "servings": number
     }
   ]
 }
 
-只返回 JSON，不要其他文字说明。`;
+Return ONLY the JSON, no additional text.`;
 
   try {
     const response = await azureOpenAI.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: "你是一位专业的营养师和健身教练，擅长根据食材生成健康的减脂菜单。"
+          content: "You are a professional nutritionist and fitness coach who specializes in creating healthy weight loss menus based on ingredients. Always respond in English."
         },
         {
           role: "user",
