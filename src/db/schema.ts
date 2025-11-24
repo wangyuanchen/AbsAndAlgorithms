@@ -173,3 +173,29 @@ export const recipesRelations = relations(recipes, ({ one }) => ({
     references: [menus.id],
   }),
 }));
+
+// Stripe Subscriptions
+export const subscriptions = pgTable("subscription", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, {
+      onDelete: "cascade"
+    }),
+  stripeCustomerId: text("stripeCustomerId").notNull(),
+  stripeSubscriptionId: text("stripeSubscriptionId").notNull(),
+  stripePriceId: text("stripePriceId").notNull(),
+  stripeCurrentPeriodEnd: timestamp("stripeCurrentPeriodEnd", { mode: "date" }).notNull(),
+  status: text("status").notNull(), // active, canceled, past_due, etc.
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull(),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).notNull(),
+});
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [subscriptions.userId],
+    references: [users.id],
+  }),
+}));

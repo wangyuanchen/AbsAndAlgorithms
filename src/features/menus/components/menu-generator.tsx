@@ -65,7 +65,17 @@ export const MenuGenerator = () => {
         setGeneratedMenu(response.data as MenuData);
       },
       onError: (error: any) => {
-        toast.error(error.message || "Failed to generate menu");
+        if (error.message?.includes("SUBSCRIPTION_REQUIRED")) {
+          toast.error("Active subscription required", {
+            description: "Please upgrade to Pro to generate AI menus",
+            action: {
+              label: "Upgrade",
+              onClick: () => window.location.href = "/subscription",
+            },
+          });
+        } else {
+          toast.error(error.message || "Failed to generate menu");
+        }
       }
     });
   };

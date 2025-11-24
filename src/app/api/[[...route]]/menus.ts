@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { Hono } from "hono";
-// import { eq, and } from "drizzle-orm"; // Not using database
+import { eq } from "drizzle-orm";
 import { verifyAuth } from "@hono/auth-js";
 import { zValidator } from "@hono/zod-validator";
 
-// import { db } from "@/db/drizzle"; // Not using database
-// import { menus, recipes } from "@/db/schema"; // Not using database
+import { db } from "@/db/drizzle";
+import { subscriptions } from "@/db/schema";
 import { generateMenuWithAI } from "@/lib/azure-openai";
 
 const app = new Hono()
@@ -41,6 +41,27 @@ const app = new Hono()
       
       if (!auth.token?.id) {
         return c.json({ error: "Authentication required" }, 401);
+      }
+
+      const userId = auth.token.id as string;
+
+      // Check subscription status
+      const userSubscription = await db
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.userId, userId))
+        .limit(1);
+
+      const hasActiveSubscription = 
+        userSubscription.length > 0 &&
+        userSubscription[0].status === "active" &&
+        userSubscription[0].stripeCurrentPeriodEnd.getTime() > Date.now();
+
+      if (!hasActiveSubscription) {
+        return c.json({ 
+          error: "Active subscription required to generate menus",
+          code: "SUBSCRIPTION_REQUIRED" 
+        }, 403);
       }
 
       const { ingredients, name } = c.req.valid("json");

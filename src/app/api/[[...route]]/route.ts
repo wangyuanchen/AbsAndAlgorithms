@@ -4,6 +4,7 @@ import { AuthConfig, initAuthConfig } from "@hono/auth-js";
 
 import users from "./users";
 import menus from "./menus";
+import subscriptions from "./subscriptions";
 
 import authConfig from "@/auth.config";
 
@@ -23,7 +24,8 @@ app.use("*", initAuthConfig(getAuthConfig));
 
 const routes = app
   .route("/users", users)
-  .route("/menus", menus);
+  .route("/menus", menus)
+  .route("/subscriptions", subscriptions);
 
 export const GET = handle(app);
 export const POST = handle(app);
