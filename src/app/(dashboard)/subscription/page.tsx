@@ -66,30 +66,76 @@ export default function SubscriptionPage() {
   }
 
   if (subscriptionData?.isSubscribed) {
+    const periodEnd = subscriptionData && 'currentPeriodEnd' in subscriptionData && subscriptionData.currentPeriodEnd
+      ? new Date(subscriptionData.currentPeriodEnd)
+      : null;
+    
+    const subscriptionId = subscriptionData && 'subscriptionId' in subscriptionData 
+      ? subscriptionData.subscriptionId 
+      : '';
+
     return (
       <div className="container max-w-2xl py-8">
         <Card className="border-green-200">
           <CardHeader>
-            <CardTitle className="text-2xl text-green-800">Active Subscription</CardTitle>
+            <div className="flex items-center gap-2 mb-2">
+              <Check className="size-8 text-green-600" />
+              <CardTitle className="text-2xl text-green-800">Active Subscription</CardTitle>
+            </div>
             <CardDescription>
               You have access to unlimited AI menu generation
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-2 text-green-700">
-              <Check className="size-5" />
-              <span>Status: Active</span>
+          <CardContent className="space-y-6">
+            <div className="bg-green-50 p-4 rounded-lg space-y-3">
+              <div className="flex items-center gap-2 text-green-700">
+                <Check className="size-5" />
+                <span className="font-semibold">Status: Active</span>
+              </div>
+              
+              {periodEnd && (
+                <div className="text-sm text-gray-700">
+                  <span className="font-semibold">Next billing date:</span>
+                  <div className="text-lg font-bold text-green-700 mt-1">
+                    {periodEnd.toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {subscriptionId && (
+                <div className="text-sm text-gray-600">
+                  <span className="font-semibold">Subscription ID:</span>
+                  <div className="font-mono text-xs mt-1">
+                    {subscriptionId}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="text-sm text-gray-600">
-              Your subscription is active and renews automatically.
+
+            <div className="pt-4 space-y-3">
+              <Button 
+                onClick={handleManageBilling}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                Manage Billing & Payment Method
+              </Button>
+              
+              <Button 
+                onClick={handleManageBilling}
+                variant="outline"
+                className="w-full border-red-300 text-red-600 hover:bg-red-50"
+              >
+                Cancel Subscription
+              </Button>
+              
+              <p className="text-xs text-center text-gray-500">
+                You can cancel anytime. Access continues until the end of your billing period.
+              </p>
             </div>
-            <Button 
-              onClick={handleManageBilling}
-              variant="outline"
-              className="border-green-600 text-green-600 hover:bg-green-50"
-            >
-              Manage Billing
-            </Button>
           </CardContent>
         </Card>
       </div>

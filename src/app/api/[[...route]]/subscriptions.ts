@@ -66,10 +66,15 @@ const app = new Hono()
             },
           ],
           mode: "subscription",
-          success_url: `${process.env.NEXT_PUBLIC_APP_URL}/?success=true&session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/?canceled=true`,
+          success_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?canceled=true`,
           metadata: {
             userId,
+          },
+          subscription_data: {
+            metadata: {
+              userId,
+            },
           },
         });
 
@@ -151,6 +156,9 @@ const app = new Hono()
             isSubscribed: isActive,
             status: subscription.status,
             currentPeriodEnd: subscription.currentPeriodEnd,
+            customerId: subscription.customerId,
+            subscriptionId: subscription.subscriptionId,
+            priceId: subscription.priceId,
           },
         });
       } catch (error) {
