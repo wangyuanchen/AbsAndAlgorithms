@@ -1,5 +1,3 @@
-import { AdSenseAd } from "@/components/adsense-ad";
-
 import { MenusSection } from "./menus-section";
 
 export default async function Home() {
@@ -35,21 +33,7 @@ export default async function Home() {
         </div>
       </div>
       
-      {/* AdSense Ad - Top Banner */}
-      <AdSenseAd 
-        adSlot="6048872360" 
-        adFormat="auto"
-        className="my-4"
-      />
-      
       <MenusSection />
-      
-      {/* AdSense Ad - Bottom Banner */}
-      <AdSenseAd 
-        adSlot="4534263102" 
-        adFormat="auto"
-        className="my-4"
-      />
     </div>
   );
 };
