@@ -1,7 +1,5 @@
-import { protectServer } from "@/features/auth/utils";
-
 export default async function PrivacyPage() {
-  await protectServer();
+  // Privacy page is public for compliance and transparency
 
   return (
     <div className="container max-w-4xl py-8 space-y-6">

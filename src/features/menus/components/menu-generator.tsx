@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +36,7 @@ interface MenuData {
 }
 
 export const MenuGenerator = () => {
+  const { status } = useSession();
   const [ingredients, setIngredients] = useState("");
   const [menuName, setMenuName] = useState("");
   const [generatedMenu, setGeneratedMenu] = useState<MenuData | null>(null);
@@ -41,6 +44,12 @@ export const MenuGenerator = () => {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check authentication
+    if (status !== "authenticated") {
+      toast.error("Please sign in to generate menus");
+      return;
+    }
     
     if (!ingredients.trim()) {
       toast.error("Please enter some ingredients");

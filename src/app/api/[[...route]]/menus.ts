@@ -1,34 +1,34 @@
 import { z } from "zod";
 import { Hono } from "hono";
-// import { eq, and } from "drizzle-orm"; // 不需要数据库
-// import { verifyAuth } from "@hono/auth-js"; // 禁用认证
+// import { eq, and } from "drizzle-orm"; // Not using database
+import { verifyAuth } from "@hono/auth-js";
 import { zValidator } from "@hono/zod-validator";
 
-// import { db } from "@/db/drizzle"; // 不需要数据库
-// import { menus, recipes } from "@/db/schema"; // 不需要数据库
+// import { db } from "@/db/drizzle"; // Not using database
+// import { menus, recipes } from "@/db/schema"; // Not using database
 import { generateMenuWithAI } from "@/lib/azure-openai";
 
 const app = new Hono()
   .get(
     "/",
-    // verifyAuth(), // 禁用认证
+    // Public endpoint - list menus (empty for now)
     async (c) => {
-      // 不使用数据库，返回空数组
+      // Not using database, return empty array
       return c.json({ data: [] });
     },
   )
   .get(
     "/:id",
-    // verifyAuth(), // 禁用认证
+    // Public endpoint - get menu by id
     zValidator("param", z.object({ id: z.string() })),
     async (c) => {
-      // 不使用数据库
+      // Not using database
       return c.json({ error: "Database not available" }, 404);
     },
   )
   .post(
     "/",
-    // verifyAuth(), // 临时禁用认证
+    verifyAuth(), // Require authentication for AI menu generation
     zValidator(
       "json",
       z.object({
@@ -37,14 +37,19 @@ const app = new Hono()
       }),
     ),
     async (c) => {
-      // const auth = c.get("authUser");
+      const auth = c.get("authUser");
+      
+      if (!auth.token?.id) {
+        return c.json({ error: "Authentication required" }, 401);
+      }
+
       const { ingredients, name } = c.req.valid("json");
 
       try {
-        // 使用 Azure OpenAI 生成菜单
+        // Use Azure OpenAI to generate menu
         const aiResponse = await generateMenuWithAI(ingredients);
         
-        // 直接返回 AI 生成的结果，不保存到数据库
+        // Return AI generated result directly, don't save to database
         const menuData = {
           id: crypto.randomUUID(),
           name: name || aiResponse.menuName,
@@ -57,7 +62,7 @@ const app = new Hono()
           updatedAt: new Date().toISOString(),
         };
 
-        // 格式化食谱数据
+        // Format recipe data
         const recipesData = aiResponse.recipes.map((recipe: any) => ({
           id: crypto.randomUUID(),
           menuId: menuData.id,
@@ -85,10 +90,10 @@ const app = new Hono()
   )
   .delete(
     "/:id",
-    // verifyAuth(), // 禁用认证
+    // Public endpoint for now (no database)
     zValidator("param", z.object({ id: z.string() })),
     async (c) => {
-      // 不使用数据库
+      // Not using database
       return c.json({ error: "Database not available" }, 404);
     },
   );

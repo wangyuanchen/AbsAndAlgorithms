@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Loader, LogOut } from "lucide-react";
+import { Loader, LogOut, LogIn } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { 
   Avatar, 
   AvatarFallback, 
@@ -23,7 +25,14 @@ export const UserButton = () => {
   }
 
   if (session.status === "unauthenticated" || !session.data) {
-    return null;
+    return (
+      <Link href="/sign-in">
+        <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700">
+          <LogIn className="size-4 mr-2" />
+          Sign In
+        </Button>
+      </Link>
+    );
   }
 
   const name = session.data?.user?.name!;

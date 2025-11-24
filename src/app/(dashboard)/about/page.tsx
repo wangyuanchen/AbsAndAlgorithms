@@ -1,7 +1,5 @@
-import { protectServer } from "@/features/auth/utils";
-
 export default async function AboutPage() {
-  await protectServer();
+  // About page is public for better SEO and AdSense compliance
 
   return (
     <div className="container max-w-4xl py-8 space-y-8">

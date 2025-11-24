@@ -1,10 +1,10 @@
-import { protectServer } from "@/features/auth/utils";
 import { AdSenseAd } from "@/components/adsense-ad";
 
 import { MenusSection } from "./menus-section";
 
 export default async function Home() {
-  await protectServer();
+  // Homepage is now public for AdSense preview and better UX
+  // Authentication is required only when using menu generation features
 
   return (
     <div className="flex flex-col space-y-6 max-w-screen-xl mx-auto pb-10">
