@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Loader, Check, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,8 +24,11 @@ export default function SubscriptionPage() {
   }, [searchParams]);
 
   const handleSubscribe = () => {
-    // Replace with your actual Stripe Price ID
-    createCheckout.mutate(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || "");
+    createCheckout.mutate(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || "", {
+      onError: (error) => {
+        toast.error(error.message || "Failed to create checkout session");
+      },
+    });
   };
 
   const handleManageBilling = () => {

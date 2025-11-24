@@ -40,6 +40,22 @@ const app = new Hono()
           .where(eq(subscriptions.userId, userId))
           .limit(1);
 
+        // Check if user already has an active subscription
+        if (existingSubscription.length > 0) {
+          const sub = existingSubscription[0];
+          const isActive = sub.status === "active" && 
+                          sub.currentPeriodEnd &&
+                          sub.currentPeriodEnd.getTime() > Date.now();
+          
+          if (isActive) {
+            return c.json({ 
+              error: "You already have an active subscription",
+              subscriptionId: sub.subscriptionId,
+              currentPeriodEnd: sub.currentPeriodEnd,
+            }, 400);
+          }
+        }
+
         let customerId: string;
 
         if (existingSubscription.length > 0) {

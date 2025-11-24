@@ -27,7 +27,8 @@ export const useCreateCheckout = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create checkout session");
+        const errorData = await response.json() as any;
+        throw new Error(errorData.error || "Failed to create checkout session");
       }
 
       const { url } = await response.json();
@@ -37,6 +38,10 @@ export const useCreateCheckout = () => {
       if (url) {
         window.location.href = url;
       }
+    },
+    onError: () => {
+      // Refresh subscription status on error (might already be subscribed)
+      queryClient.invalidateQueries({ queryKey: ["subscription-status"] });
     },
   });
 };
