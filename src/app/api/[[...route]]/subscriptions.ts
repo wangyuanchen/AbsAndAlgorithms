@@ -40,10 +40,10 @@ const app = new Hono()
           .where(eq(subscriptions.userId, userId))
           .limit(1);
 
-        let stripeCustomerId: string;
+        let customerId: string;
 
         if (existingSubscription.length > 0) {
-          stripeCustomerId = existingSubscription[0].stripeCustomerId;
+          customerId = existingSubscription[0].customerId;
         } else {
           // Create Stripe customer
           const customer = await stripe.customers.create({
@@ -52,12 +52,12 @@ const app = new Hono()
               userId,
             },
           });
-          stripeCustomerId = customer.id;
+          customerId = customer.id;
         }
 
         // Create checkout session
         const session = await stripe.checkout.sessions.create({
-          customer: stripeCustomerId,
+          customer: customerId,
           billing_address_collection: "auto",
           line_items: [
             {
@@ -106,7 +106,7 @@ const app = new Hono()
         }
 
         const portalSession = await stripe.billingPortal.sessions.create({
-          customer: userSubscription[0].stripeCustomerId,
+          customer: userSubscription[0].customerId,
           return_url: process.env.NEXT_PUBLIC_APP_URL!,
         });
 
@@ -143,13 +143,14 @@ const app = new Hono()
 
         const subscription = userSubscription[0];
         const isActive = subscription.status === "active" && 
-                        subscription.stripeCurrentPeriodEnd.getTime() > Date.now();
+                        subscription.currentPeriodEnd &&
+                        subscription.currentPeriodEnd.getTime() > Date.now();
 
         return c.json({
           data: {
             isSubscribed: isActive,
             status: subscription.status,
-            currentPeriodEnd: subscription.stripeCurrentPeriodEnd,
+            currentPeriodEnd: subscription.currentPeriodEnd,
           },
         });
       } catch (error) {
@@ -196,10 +197,10 @@ const app = new Hono()
 
             const subscriptionData = {
               userId,
-              stripeCustomerId: subscription.customer,
-              stripeSubscriptionId: subscription.id,
-              stripePriceId: subscription.items.data[0].price.id,
-              stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+              customerId: subscription.customer,
+              subscriptionId: subscription.id,
+              priceId: subscription.items.data[0].price.id,
+              currentPeriodEnd: new Date(subscription.current_period_end * 1000),
               status: subscription.status,
               updatedAt: new Date(),
             };

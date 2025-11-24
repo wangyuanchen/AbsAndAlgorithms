@@ -184,11 +184,11 @@ export const subscriptions = pgTable("subscription", {
     .references(() => users.id, {
       onDelete: "cascade"
     }),
-  stripeCustomerId: text("stripeCustomerId").notNull(),
-  stripeSubscriptionId: text("stripeSubscriptionId").notNull(),
-  stripePriceId: text("stripePriceId").notNull(),
-  stripeCurrentPeriodEnd: timestamp("stripeCurrentPeriodEnd", { mode: "date" }).notNull(),
+  subscriptionId: text("subscriptionId").notNull(),
+  customerId: text("customerId").notNull(),
+  priceId: text("priceId").notNull(),
   status: text("status").notNull(), // active, canceled, past_due, etc.
+  currentPeriodEnd: timestamp("currentPeriodEnd", { mode: "date" }),
   createdAt: timestamp("createdAt", { mode: "date" }).notNull(),
   updatedAt: timestamp("updatedAt", { mode: "date" }).notNull(),
 });

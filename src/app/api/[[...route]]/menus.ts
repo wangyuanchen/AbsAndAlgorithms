@@ -55,7 +55,8 @@ const app = new Hono()
       const hasActiveSubscription = 
         userSubscription.length > 0 &&
         userSubscription[0].status === "active" &&
-        userSubscription[0].stripeCurrentPeriodEnd.getTime() > Date.now();
+        userSubscription[0].currentPeriodEnd &&
+        userSubscription[0].currentPeriodEnd.getTime() > Date.now();
 
       if (!hasActiveSubscription) {
         return c.json({ 
