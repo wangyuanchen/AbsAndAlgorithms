@@ -1,11 +1,8 @@
 import { z } from "zod";
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
 import { verifyAuth } from "@hono/auth-js";
 import { zValidator } from "@hono/zod-validator";
-
-import { db } from "@/db/drizzle";
-import { subscriptions } from "@/db/schema";
+import { createClient } from "@/lib/supabase/server";
 import { stripe } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -33,33 +30,34 @@ const app = new Hono()
       const userEmail = auth.token.email as string;
 
       try {
+        const supabase = await createClient();
+        
         // Check if user already has a subscription
-        const existingSubscription = await db
-          .select()
-          .from(subscriptions)
-          .where(eq(subscriptions.userId, userId))
-          .limit(1);
+        const { data: existingSubscription } = await supabase
+          .from('subscription')
+          .select('*')
+          .eq('userId', userId)
+          .single();
 
         // Check if user already has an active subscription
-        if (existingSubscription.length > 0) {
-          const sub = existingSubscription[0];
-          const isActive = sub.status === "active" && 
-                          sub.currentPeriodEnd &&
-                          sub.currentPeriodEnd.getTime() > Date.now();
+        if (existingSubscription) {
+          const isActive = existingSubscription.status === "active" && 
+                          existingSubscription.currentPeriodEnd &&
+                          new Date(existingSubscription.currentPeriodEnd).getTime() > Date.now();
           
           if (isActive) {
             return c.json({ 
               error: "You already have an active subscription",
-              subscriptionId: sub.subscriptionId,
-              currentPeriodEnd: sub.currentPeriodEnd,
+              subscriptionId: existingSubscription.subscriptionId,
+              currentPeriodEnd: existingSubscription.currentPeriodEnd,
             }, 400);
           }
         }
 
         let customerId: string;
 
-        if (existingSubscription.length > 0) {
-          customerId = existingSubscription[0].customerId;
+        if (existingSubscription) {
+          customerId = existingSubscription.customerId;
         } else {
           // Create Stripe customer
           const customer = await stripe.customers.create({
@@ -115,19 +113,21 @@ const app = new Hono()
       const userId = auth.token.id as string;
 
       try {
+        const supabase = await createClient();
+        
         // Get user's subscription
-        const userSubscription = await db
-          .select()
-          .from(subscriptions)
-          .where(eq(subscriptions.userId, userId))
-          .limit(1);
+        const { data: userSubscription } = await supabase
+          .from('subscription')
+          .select('*')
+          .eq('userId', userId)
+          .single();
 
-        if (userSubscription.length === 0) {
+        if (!userSubscription) {
           return c.json({ error: "No subscription found" }, 404);
         }
 
         const portalSession = await stripe.billingPortal.sessions.create({
-          customer: userSubscription[0].customerId,
+          customer: userSubscription.customerId,
           return_url: process.env.NEXT_PUBLIC_APP_URL!,
         });
 
@@ -152,29 +152,30 @@ const app = new Hono()
       const userId = auth.token.id as string;
 
       try {
-        const userSubscription = await db
-          .select()
-          .from(subscriptions)
-          .where(eq(subscriptions.userId, userId))
-          .limit(1);
+        const supabase = await createClient();
+        
+        const { data: userSubscription } = await supabase
+          .from('subscription')
+          .select('*')
+          .eq('userId', userId)
+          .single();
 
-        if (userSubscription.length === 0) {
+        if (!userSubscription) {
           return c.json({ data: { isSubscribed: false } });
         }
 
-        const subscription = userSubscription[0];
-        const isActive = subscription.status === "active" && 
-                        subscription.currentPeriodEnd &&
-                        subscription.currentPeriodEnd.getTime() > Date.now();
+        const isActive = userSubscription.status === "active" && 
+                        userSubscription.currentPeriodEnd &&
+                        new Date(userSubscription.currentPeriodEnd).getTime() > Date.now();
 
         return c.json({
           data: {
             isSubscribed: isActive,
-            status: subscription.status,
-            currentPeriodEnd: subscription.currentPeriodEnd,
-            customerId: subscription.customerId,
-            subscriptionId: subscription.subscriptionId,
-            priceId: subscription.priceId,
+            status: userSubscription.status,
+            currentPeriodEnd: userSubscription.currentPeriodEnd,
+            customerId: userSubscription.customerId,
+            subscriptionId: userSubscription.subscriptionId,
+            priceId: userSubscription.priceId,
           },
         });
       } catch (error) {
@@ -212,33 +213,37 @@ const app = new Hono()
               break;
             }
 
-            // Upsert subscription
-            const existingSub = await db
-              .select()
-              .from(subscriptions)
-              .where(eq(subscriptions.userId, userId))
-              .limit(1);
+            const supabase = await createClient();
+            
+            // Check if subscription exists
+            const { data: existingSub } = await supabase
+              .from('subscription')
+              .select('*')
+              .eq('userId', userId)
+              .single();
 
             const subscriptionData = {
               userId,
               customerId: subscription.customer,
               subscriptionId: subscription.id,
               priceId: subscription.items.data[0].price.id,
-              currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+              currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
               status: subscription.status,
-              updatedAt: new Date(),
+              updatedAt: new Date().toISOString(),
             };
 
-            if (existingSub.length > 0) {
-              await db
-                .update(subscriptions)
-                .set(subscriptionData)
-                .where(eq(subscriptions.userId, userId));
+            if (existingSub) {
+              await supabase
+                .from('subscription')
+                .update(subscriptionData)
+                .eq('userId', userId);
             } else {
-              await db.insert(subscriptions).values({
-                ...subscriptionData,
-                createdAt: new Date(),
-              });
+              await supabase
+                .from('subscription')
+                .insert({
+                  ...subscriptionData,
+                  createdAt: new Date().toISOString(),
+                });
             }
             break;
           }
@@ -248,13 +253,15 @@ const app = new Hono()
             const userId = subscription.metadata.userId;
 
             if (userId) {
-              await db
-                .update(subscriptions)
-                .set({
+              const supabase = await createClient();
+              
+              await supabase
+                .from('subscription')
+                .update({
                   status: "canceled",
-                  updatedAt: new Date(),
+                  updatedAt: new Date().toISOString(),
                 })
-                .where(eq(subscriptions.userId, userId));
+                .eq('userId', userId);
             }
             break;
           }
