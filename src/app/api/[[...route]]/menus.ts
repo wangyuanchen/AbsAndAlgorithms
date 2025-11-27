@@ -1,11 +1,8 @@
 import { z } from "zod";
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
 import { verifyAuth } from "@hono/auth-js";
 import { zValidator } from "@hono/zod-validator";
-
-import { db } from "@/db/drizzle";
-import { subscriptions } from "@/db/schema";
+import { createClient } from "@/lib/supabase/server";
 import { generateMenuWithAI } from "@/lib/azure-openai";
 
 const app = new Hono()
@@ -46,17 +43,19 @@ const app = new Hono()
       const userId = auth.token.id as string;
 
       // Check subscription status
-      const userSubscription = await db
-        .select()
-        .from(subscriptions)
-        .where(eq(subscriptions.userId, userId))
-        .limit(1);
+      const supabase = await createClient();
+      
+      const { data: userSubscription } = await supabase
+        .from('subscription')
+        .select('*')
+        .eq('userId', userId)
+        .single();
 
       const hasActiveSubscription = 
-        userSubscription.length > 0 &&
-        userSubscription[0].status === "active" &&
-        userSubscription[0].currentPeriodEnd &&
-        userSubscription[0].currentPeriodEnd.getTime() > Date.now();
+        userSubscription &&
+        userSubscription.status === "active" &&
+        userSubscription.currentPeriodEnd &&
+        new Date(userSubscription.currentPeriodEnd).getTime() > Date.now();
 
       if (!hasActiveSubscription) {
         return c.json({ 

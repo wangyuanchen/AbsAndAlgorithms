@@ -1,12 +1,8 @@
 import { z } from "zod";
 import type { NextAuthConfig } from "next-auth";
-import { eq } from "drizzle-orm";
 import { JWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
-
-import { db } from "@/db/drizzle";
-import { users } from "@/db/schema";
+import { createClient } from "@/lib/supabase/server";
 
 const CredentialsSchema = z.object({
   email: z.string().email(),
@@ -26,7 +22,6 @@ declare module "@auth/core/jwt" {
 }
 
 export default {
-  adapter: DrizzleAdapter(db),
   providers: [
     Credentials({
       credentials: {
@@ -42,14 +37,16 @@ export default {
 
         const { email, password } = validatedFields.data;
 
-        const query = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, email));
+        // Use Supabase instead of Drizzle
+        const supabase = await createClient();
+        
+        const { data: user, error } = await supabase
+          .from('user')
+          .select('*')
+          .eq('email', email)
+          .single();
 
-        const user = query[0];
-
-        if (!user || !user.password) {
+        if (error || !user || !user.password) {
           return null;
         }
 

@@ -1,10 +1,7 @@
 import { z } from "zod";
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
 import { zValidator } from "@hono/zod-validator";
-
-import { db } from "@/db/drizzle";
-import { users } from "@/db/schema";
+import { createClient } from "@/lib/supabase/server";
 
 const app = new Hono()
   .post(
@@ -23,20 +20,31 @@ const app = new Hono()
       const bcrypt = await import("bcryptjs");
       const hashedPassword = await bcrypt.default.hash(password, 12);
 
-      const query = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, email));
+      const supabase = await createClient();
+      
+      // Check if email already exists
+      const { data: existingUser } = await supabase
+        .from('user')
+        .select('*')
+        .eq('email', email)
+        .single();
 
-      if (query[0]) {
+      if (existingUser) {
         return c.json({ error: "Email already in use" }, 400);
       }
 
-      await db.insert(users).values({
-        email,
-        name,
-        password: hashedPassword,
-      });
+      // Insert new user
+      const { error: insertError } = await supabase
+        .from('user')
+        .insert({
+          email,
+          name,
+          password: hashedPassword,
+        });
+      
+      if (insertError) {
+        return c.json({ error: "Failed to create user" }, 500);
+      }
       
       return c.json(null, 200);
     },
