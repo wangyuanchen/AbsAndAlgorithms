@@ -30,6 +30,10 @@ export const SignInCard = () => {
       email: email,
       password: password,
       callbackUrl: "/",
+    }).then(() => {
+      // Reset loading states after sign in attempt
+      setLoading(false);
+      setLoadingLogin(false);
     });
   };
 
@@ -67,7 +71,7 @@ export const SignInCard = () => {
             disabled={loading || loadingLogin}
             required
           />
-          <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold" type="submit" size="lg" disabled={loading}>
+          <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold" type="submit" size="lg" disabled={loading || loadingLogin}>
             {loadingLogin ? (
               <Loader2 className="mr-2 size-5 top-2.5 left-2.5 animate-spin" />
             ) : (

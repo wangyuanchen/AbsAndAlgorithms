@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Loader, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,15 @@ import { useSubscriptionStatus, useCreateCheckout, useCreatePortal } from "@/fea
 
 export default function SubscriptionPage() {
   const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
   const [showSuccess, setShowSuccess] = useState(false);
+  
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      window.location.href = "/sign-in";
+    }
+  }, [status]);
   
   const { data: subscriptionData, isLoading } = useSubscriptionStatus();
   const createCheckout = useCreateCheckout();
@@ -24,7 +33,10 @@ export default function SubscriptionPage() {
   }, [searchParams]);
 
   const handleSubscribe = () => {
-    createCheckout.mutate(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || "", {
+    // Use HK$49 monthly price ID
+    const priceId = "price_HK49_MONTHLY"; // Replace with actual Stripe price ID
+    
+    createCheckout.mutate(priceId, {
       onError: (error) => {
         toast.error(error.message || "Failed to create checkout session");
       },
@@ -164,7 +176,7 @@ export default function SubscriptionPage() {
             <CardTitle className="text-2xl text-green-800">Pro Plan</CardTitle>
           </div>
           <CardDescription>
-            <span className="text-3xl font-bold text-green-700">$20</span>
+            <span className="text-3xl font-bold text-green-700">HK$49</span>
             <span className="text-gray-600"> / month</span>
           </CardDescription>
         </CardHeader>
@@ -191,6 +203,19 @@ export default function SubscriptionPage() {
               <span>Priority customer support</span>
             </li>
           </ul>
+
+          {/* Show login prompt if not authenticated */}
+          {status === "unauthenticated" && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+              <p className="text-yellow-800 mb-2">Please log in to subscribe</p>
+              <Button 
+                onClick={() => window.location.href = "/sign-in"}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Log In to Subscribe
+              </Button>
+            </div>
+          )}
 
           <Button
             onClick={handleSubscribe}
