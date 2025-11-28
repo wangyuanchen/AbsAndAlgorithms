@@ -30,10 +30,12 @@ export const UserButton = () => {
         variant="default" 
         size="sm" 
         className="bg-green-600 hover:bg-green-700"
-        onClick={() => window.location.href = "/sign-in"}
+        asChild
       >
-        <LogIn className="size-4 mr-2" />
-        Sign In
+        <Link href="/sign-in">
+          <LogIn className="size-4 mr-2" />
+          Sign In
+        </Link>
       </Button>
     );
   }
