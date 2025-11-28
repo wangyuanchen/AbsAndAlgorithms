@@ -30,6 +30,17 @@ const app = new Hono()
       const userEmail = auth.token.email as string;
 
       try {
+        // Validate Stripe configuration
+        if (!process.env.STRIPE_SECRET_KEY) {
+          console.error("Missing STRIPE_SECRET_KEY environment variable");
+          return c.json({ error: "Payment configuration error" }, 500);
+        }
+        
+        if (!process.env.NEXT_PUBLIC_APP_URL) {
+          console.error("Missing NEXT_PUBLIC_APP_URL environment variable");
+          return c.json({ error: "App configuration error" }, 500);
+        }
+
         const supabase = await createClient();
         
         // Check if user already has a subscription
@@ -60,37 +71,55 @@ const app = new Hono()
           customerId = existingSubscription.customerId;
         } else {
           // Create Stripe customer
-          const customer = await stripe.customers.create({
-            email: userEmail,
-            metadata: {
-              userId,
-            },
-          });
+          let customer;
+          try {
+            customer = await stripe.customers.create({
+              email: userEmail,
+              metadata: {
+                userId,
+              },
+            });
+          } catch (stripeError: any) {
+            console.error("Failed to create Stripe customer:", stripeError);
+            return c.json({ 
+              error: "Failed to initialize payment session", 
+              details: stripeError.message 
+            }, 500);
+          }
           customerId = customer.id;
         }
 
         // Create checkout session
-        const session = await stripe.checkout.sessions.create({
-          customer: customerId,
-          billing_address_collection: "auto",
-          line_items: [
-            {
-              price: priceId,
-              quantity: 1,
-            },
-          ],
-          mode: "subscription",
-          success_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?canceled=true`,
-          metadata: {
-            userId,
-          },
-          subscription_data: {
+        let session;
+        try {
+          session = await stripe.checkout.sessions.create({
+            customer: customerId,
+            billing_address_collection: "auto",
+            line_items: [
+              {
+                price: priceId,
+                quantity: 1,
+              },
+            ],
+            mode: "subscription",
+            success_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?canceled=true`,
             metadata: {
               userId,
             },
-          },
-        });
+            subscription_data: {
+              metadata: {
+                userId,
+              },
+            },
+          });
+        } catch (stripeError: any) {
+          console.error("Failed to create checkout session:", stripeError);
+          return c.json({ 
+            error: "Failed to create checkout session", 
+            details: stripeError.message 
+          }, 500);
+        }
 
         return c.json({ url: session.url });
       } catch (error) {

@@ -33,8 +33,8 @@ export default function SubscriptionPage() {
   }, [searchParams]);
 
   const handleSubscribe = () => {
-    // Use HK$49 monthly price ID
-    const priceId = "price_HK49_MONTHLY"; // Replace with actual Stripe price ID
+    // Use actual Stripe price ID for HK$49 monthly
+    const priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || "price_HK49_MONTHLY"; // Replace with actual Stripe price ID
     
     createCheckout.mutate(priceId, {
       onError: (error) => {

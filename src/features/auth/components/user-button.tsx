@@ -26,12 +26,15 @@ export const UserButton = () => {
 
   if (session.status === "unauthenticated" || !session.data) {
     return (
-      <Link href="/sign-in">
-        <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700">
-          <LogIn className="size-4 mr-2" />
-          Sign In
-        </Button>
-      </Link>
+      <Button 
+        variant="default" 
+        size="sm" 
+        className="bg-green-600 hover:bg-green-700"
+        onClick={() => window.location.href = "/sign-in"}
+      >
+        <LogIn className="size-4 mr-2" />
+        Sign In
+      </Button>
     );
   }
 
