@@ -7,6 +7,7 @@ import {
   text,
   primaryKey,
   integer,
+  serial,
 } from "drizzle-orm/pg-core"
 import type { AdapterAccountType } from "next-auth/adapters"
  
@@ -122,9 +123,7 @@ export const projectsRelations = relations(projects, ({ one }) => ({
 export const projectsInsertSchema = createInsertSchema(projects);
 
 export const menus = pgTable("menu", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+  id: serial("id").primaryKey(),
   userId: text("userId")
     .notNull()
     .references(() => users.id, {
@@ -141,9 +140,7 @@ export const menus = pgTable("menu", {
 });
 
 export const recipes = pgTable("recipe", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+  id: serial("id").primaryKey(),
   menuId: text("menuId")
     .notNull()
     .references(() => menus.id, {
@@ -176,9 +173,7 @@ export const recipesRelations = relations(recipes, ({ one }) => ({
 
 // Stripe Subscriptions
 export const subscriptions = pgTable("subscription", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+  id: serial("id").primaryKey(),
   userId: text("userId")
     .notNull()
     .references(() => users.id, {
