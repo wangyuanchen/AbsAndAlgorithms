@@ -225,31 +225,49 @@ const app = new Hono()
       }
 
       try {
+        // Validate webhook secret
+        if (!process.env.STRIPE_WEBHOOK_SECRET) {
+          console.error("Missing STRIPE_WEBHOOK_SECRET environment variable");
+          return c.json({ error: "Webhook configuration error" }, 500);
+        }
+
         const event = stripe.webhooks.constructEvent(
           body,
           signature,
-          process.env.STRIPE_WEBHOOK_SECRET!
+          process.env.STRIPE_WEBHOOK_SECRET
         );
 
         switch (event.type) {
           case "customer.subscription.created":
           case "customer.subscription.updated": {
             const subscription = event.data.object as any;
-            const userId = subscription.metadata.userId;
+            const userId = subscription.metadata?.userId;
+
+            console.log("Processing subscription event:", event.type, {
+              subscriptionId: subscription.id,
+              userId: userId,
+              customerId: subscription.customer,
+              status: subscription.status
+            });
 
             if (!userId) {
-              console.error("No userId in subscription metadata");
+              console.error("No userId in subscription metadata", subscription);
               break;
             }
 
             const supabase = await createClient();
             
             // Check if subscription exists
-            const { data: existingSub } = await supabase
+            const { data: existingSub, error: fetchError } = await supabase
               .from('subscription')
               .select('*')
               .eq('userId', userId)
               .single();
+
+            if (fetchError && fetchError.code !== 'PGRST116') {  // PGRST116 is 'Record not found'
+              console.error("Database fetch error:", fetchError);
+              break;
+            }
 
             const subscriptionData = {
               userId,
@@ -261,36 +279,61 @@ const app = new Hono()
               updatedAt: new Date().toISOString(),
             };
 
+            console.log("Subscription data to save:", subscriptionData);
+
             if (existingSub) {
-              await supabase
+              const { error: updateError } = await supabase
                 .from('subscription')
                 .update(subscriptionData)
                 .eq('userId', userId);
+              
+              if (updateError) {
+                console.error("Failed to update subscription:", updateError);
+              } else {
+                console.log("Subscription updated successfully for user:", userId);
+              }
             } else {
-              await supabase
+              const { error: insertError } = await supabase
                 .from('subscription')
                 .insert({
                   ...subscriptionData,
                   createdAt: new Date().toISOString(),
                 });
+              
+              if (insertError) {
+                console.error("Failed to insert subscription:", insertError);
+              } else {
+                console.log("Subscription created successfully for user:", userId);
+              }
             }
             break;
           }
 
           case "customer.subscription.deleted": {
             const subscription = event.data.object as any;
-            const userId = subscription.metadata.userId;
+            const userId = subscription.metadata?.userId;
+
+            console.log("Processing subscription deletion:", {
+              subscriptionId: subscription.id,
+              userId: userId
+            });
 
             if (userId) {
               const supabase = await createClient();
               
-              await supabase
+              const { error: updateError } = await supabase
                 .from('subscription')
                 .update({
                   status: "canceled",
                   updatedAt: new Date().toISOString(),
                 })
                 .eq('userId', userId);
+              
+              if (updateError) {
+                console.error("Failed to cancel subscription:", updateError);
+              } else {
+                console.log("Subscription canceled successfully for user:", userId);
+              }
             }
             break;
           }
