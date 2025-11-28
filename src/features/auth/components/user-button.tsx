@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Loader, LogOut, LogIn } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { 
@@ -19,6 +20,7 @@ import {
 
 export const UserButton = () => {
   const session = useSession();
+  const router = useRouter();
 
   if (session.status === "loading") {
     return <Loader className="size-4 animate-spin text-muted-foreground" />
@@ -30,12 +32,10 @@ export const UserButton = () => {
         variant="default" 
         size="sm" 
         className="bg-green-600 hover:bg-green-700"
-        asChild
+        onClick={() => router.push("/sign-in")}
       >
-        <Link href="/sign-in">
-          <LogIn className="size-4 mr-2" />
-          Sign In
-        </Link>
+        <LogIn className="size-4 mr-2" />
+        Sign In
       </Button>
     );
   }
