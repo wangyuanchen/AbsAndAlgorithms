@@ -52,7 +52,9 @@ const app = new Hono()
 
         // Check if user already has an active subscription
         if (existingSubscription) {
-          const isActive = existingSubscription.status === "active" && 
+          // Define active statuses according to Stripe documentation
+          const activeStatuses = ['active', 'trialing'];
+          const isActive = activeStatuses.includes(existingSubscription.status) && 
                           existingSubscription.currentPeriodEnd &&
                           new Date(existingSubscription.currentPeriodEnd).getTime() > Date.now();
           
@@ -61,6 +63,7 @@ const app = new Hono()
               error: "You already have an active subscription",
               subscriptionId: existingSubscription.subscriptionId,
               currentPeriodEnd: existingSubscription.currentPeriodEnd,
+              status: existingSubscription.status
             }, 400);
           }
         }
@@ -193,7 +196,8 @@ const app = new Hono()
           return c.json({ data: { isSubscribed: false } });
         }
 
-        const isActive = userSubscription.status === "active" && 
+        const activeStatuses = ['active', 'trialing'];
+        const isActive = activeStatuses.includes(userSubscription.status) && 
                         userSubscription.currentPeriodEnd &&
                         new Date(userSubscription.currentPeriodEnd).getTime() > Date.now();
 
@@ -238,6 +242,241 @@ const app = new Hono()
         );
 
         switch (event.type) {
+          case "checkout.session.completed": {
+            const session = event.data.object as any;
+            const userId = session.metadata?.userId;
+
+            console.log("Processing checkout session completed:", {
+              sessionId: session.id,
+              userId: userId,
+              customerId: session.customer,
+              status: session.status
+            });
+
+            if (!userId) {
+              console.error("No userId in session metadata", session);
+              break;
+            }
+
+            // 获取订阅信息（如果有的话）
+            if (session.subscription) {
+              try {
+                const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+                
+                const supabase = await createClient();
+                
+                // 安全处理日期值
+                let currentPeriodEnd: string | null = null;
+                if (subscription.current_period_end) {
+                  try {
+                    currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+                  } catch (dateError) {
+                    console.error("Error parsing current_period_end:", dateError);
+                    currentPeriodEnd = null;
+                  }
+                }
+
+                const subscriptionData = {
+                  userId,
+                  customerId: subscription.customer as string,
+                  subscriptionId: subscription.id,
+                  priceId: subscription.items.data[0].price.id,
+                  currentPeriodEnd: currentPeriodEnd,
+                  status: subscription.status,
+                  updatedAt: new Date().toISOString(),
+                };
+
+                console.log("Subscription data from checkout session:", subscriptionData);
+
+                // 检查订阅是否已存在
+                const { data: existingSub, error: fetchError } = await supabase
+                  .from('subscription')
+                  .select('*')
+                  .eq('userId', userId)
+                  .single();
+
+                if (existingSub) {
+                  const { error: updateError } = await supabase
+                    .from('subscription')
+                    .update(subscriptionData)
+                    .eq('userId', userId);
+                  
+                  if (updateError) {
+                    console.error("Failed to update subscription:", updateError);
+                  } else {
+                    console.log("Subscription updated successfully for user:", userId);
+                  }
+                } else {
+                  const { error: insertError } = await supabase
+                    .from('subscription')
+                    .insert({
+                      ...subscriptionData,
+                      createdAt: new Date().toISOString(),
+                    });
+                  
+                  if (insertError) {
+                    console.error("Failed to insert subscription:", insertError);
+                  } else {
+                    console.log("Subscription created successfully for user:", userId);
+                  }
+                }
+              } catch (error) {
+                console.error("Error retrieving subscription:", error);
+              }
+            }
+            break;
+          }
+
+          case "invoice.payment_succeeded": {
+            const invoice = event.data.object as any;
+            const subscriptionId = invoice.subscription;
+            
+            console.log("Processing invoice payment succeeded:", {
+              invoiceId: invoice.id,
+              subscriptionId: subscriptionId,
+              customerId: invoice.customer
+            });
+
+            if (subscriptionId) {
+              try {
+                // 获取最新的订阅信息
+                const subscription = await stripe.subscriptions.retrieve(subscriptionId as string);
+                const userId = subscription.metadata?.userId;
+                
+                if (!userId) {
+                  console.error("No userId in subscription metadata", subscription);
+                  break;
+                }
+
+                const supabase = await createClient();
+                
+                // 安全处理日期值
+                let currentPeriodEnd: string | null = null;
+                if (subscription.current_period_end) {
+                  try {
+                    currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+                  } catch (dateError) {
+                    console.error("Error parsing current_period_end:", dateError);
+                    currentPeriodEnd = null;
+                  }
+                }
+
+                const subscriptionData = {
+                  userId,
+                  customerId: subscription.customer as string,
+                  subscriptionId: subscription.id,
+                  priceId: subscription.items.data[0].price.id,
+                  currentPeriodEnd: currentPeriodEnd,
+                  status: subscription.status,
+                  updatedAt: new Date().toISOString(),
+                };
+
+                console.log("Subscription data from invoice payment:", subscriptionData);
+
+                // 更新订阅信息
+                const { data: existingSub, error: fetchError } = await supabase
+                  .from('subscription')
+                  .select('*')
+                  .eq('userId', userId)
+                  .single();
+
+                if (existingSub) {
+                  const { error: updateError } = await supabase
+                    .from('subscription')
+                    .update(subscriptionData)
+                    .eq('userId', userId);
+                  
+                  if (updateError) {
+                    console.error("Failed to update subscription:", updateError);
+                  } else {
+                    console.log("Subscription updated successfully for user:", userId);
+                  }
+                } else {
+                  const { error: insertError } = await supabase
+                    .from('subscription')
+                    .insert({
+                      ...subscriptionData,
+                      createdAt: new Date().toISOString(),
+                    });
+                  
+                  if (insertError) {
+                    console.error("Failed to insert subscription:", insertError);
+                  } else {
+                    console.log("Subscription created successfully for user:", userId);
+                  }
+                }
+              } catch (error) {
+                console.error("Error retrieving subscription:", error);
+              }
+            }
+            break;
+          }
+
+          case "invoice.payment_failed": {
+            const invoice = event.data.object as any;
+            const subscriptionId = invoice.subscription;
+            
+            console.log("Processing invoice payment failed:", {
+              invoiceId: invoice.id,
+              subscriptionId: subscriptionId,
+              customerId: invoice.customer,
+              status: invoice.status
+            });
+
+            if (subscriptionId) {
+              try {
+                // 获取最新的订阅信息
+                const subscription = await stripe.subscriptions.retrieve(subscriptionId as string);
+                const userId = subscription.metadata?.userId;
+                
+                if (!userId) {
+                  console.error("No userId in subscription metadata", subscription);
+                  break;
+                }
+
+                const supabase = await createClient();
+                
+                // 安全处理日期值
+                let currentPeriodEnd: string | null = null;
+                if (subscription.current_period_end) {
+                  try {
+                    currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+                  } catch (dateError) {
+                    console.error("Error parsing current_period_end:", dateError);
+                    currentPeriodEnd = null;
+                  }
+                }
+
+                const subscriptionData = {
+                  userId,
+                  customerId: subscription.customer as string,
+                  subscriptionId: subscription.id,
+                  priceId: subscription.items.data[0].price.id,
+                  currentPeriodEnd: currentPeriodEnd,
+                  status: subscription.status, // 通常是 past_due 或 unpaid
+                  updatedAt: new Date().toISOString(),
+                };
+
+                console.log("Subscription data from failed payment:", subscriptionData);
+
+                // 更新订阅信息
+                const { error: updateError } = await supabase
+                  .from('subscription')
+                  .update(subscriptionData)
+                  .eq('userId', userId);
+                
+                if (updateError) {
+                  console.error("Failed to update subscription after payment failure:", updateError);
+                } else {
+                  console.log("Subscription updated successfully after payment failure for user:", userId);
+                }
+              } catch (error) {
+                console.error("Error retrieving subscription after payment failure:", error);
+              }
+            }
+            break;
+          }
+
           case "customer.subscription.created":
           case "customer.subscription.updated": {
             const subscription = event.data.object as any;
