@@ -247,7 +247,8 @@ const app = new Hono()
               subscriptionId: subscription.id,
               userId: userId,
               customerId: subscription.customer,
-              status: subscription.status
+              status: subscription.status,
+              currentPeriodEnd: subscription.current_period_end
             });
 
             if (!userId) {
@@ -269,12 +270,23 @@ const app = new Hono()
               break;
             }
 
+            // 安全处理日期值
+            let currentPeriodEnd: string | null = null;
+            if (subscription.current_period_end) {
+              try {
+                currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+              } catch (dateError) {
+                console.error("Error parsing current_period_end:", dateError);
+                currentPeriodEnd = null;
+              }
+            }
+
             const subscriptionData = {
               userId,
               customerId: subscription.customer,
               subscriptionId: subscription.id,
-              priceId: subscription.items.data[0].price.id,
-              currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+              priceId: subscription.items?.data?.[0]?.price?.id || '',
+              currentPeriodEnd: currentPeriodEnd,
               status: subscription.status,
               updatedAt: new Date().toISOString(),
             };
@@ -315,7 +327,8 @@ const app = new Hono()
 
             console.log("Processing subscription deletion:", {
               subscriptionId: subscription.id,
-              userId: userId
+              userId: userId,
+              currentPeriodEnd: subscription.current_period_end
             });
 
             if (userId) {
