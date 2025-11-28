@@ -23,11 +23,17 @@ const app = new Hono()
       const supabase = await createClient();
       
       // Check if email already exists
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: fetchError } = await supabase
         .from('user')
         .select('*')
         .eq('email', email)
         .single();
+
+      // If there's an error other than 'not found', return error
+      if (fetchError && fetchError.code !== 'PGRST116') {  // PGRST116 is 'Record not found'
+        console.error('Database error:', fetchError);
+        return c.json({ error: "Database error" }, 500);
+      }
 
       if (existingUser) {
         return c.json({ error: "Email already in use" }, 400);
@@ -37,13 +43,15 @@ const app = new Hono()
       const { error: insertError } = await supabase
         .from('user')
         .insert({
+          id: crypto.randomUUID(), // Generate UUID for the user
           email,
           name,
           password: hashedPassword,
         });
       
       if (insertError) {
-        return c.json({ error: "Failed to create user" }, 500);
+        console.error('Failed to create user:', insertError);
+        return c.json({ error: "Failed to create user", details: insertError.message }, 500);
       }
       
       return c.json(null, 200);
