@@ -44,7 +44,11 @@ export default function SubscriptionPage() {
   };
 
   const handleManageBilling = () => {
-    createPortal.mutate();
+    createPortal.mutate(undefined, {
+      onError: (error) => {
+        toast.error(error.message || "Failed to create billing portal");
+      },
+    });
   };
 
   if (isLoading) {
@@ -72,8 +76,13 @@ export default function SubscriptionPage() {
             <Button 
               onClick={handleManageBilling}
               className="bg-green-600 hover:bg-green-700"
+              disabled={createPortal.isPending}
             >
-              Manage Billing
+              {createPortal.isPending ? (
+                <Loader className="size-4 mr-2 animate-spin" />
+              ) : (
+                "Manage Billing"
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -136,16 +145,26 @@ export default function SubscriptionPage() {
               <Button 
                 onClick={handleManageBilling}
                 className="w-full bg-green-600 hover:bg-green-700"
+                disabled={createPortal.isPending}
               >
-                Manage Billing & Payment Method
+                {createPortal.isPending ? (
+                  <Loader className="size-4 mr-2 animate-spin" />
+                ) : (
+                  "Manage Billing & Payment Method"
+                )}
               </Button>
               
               <Button 
                 onClick={handleManageBilling}
                 variant="outline"
                 className="w-full border-red-300 text-red-600 hover:bg-red-50"
+                disabled={createPortal.isPending}
               >
-                Cancel Subscription
+                {createPortal.isPending ? (
+                  <Loader className="size-4 mr-2 animate-spin" />
+                ) : (
+                  "Cancel Subscription"
+                )}
               </Button>
               
               <p className="text-xs text-center text-gray-500">

@@ -52,7 +52,8 @@ export const useCreatePortal = () => {
       const response = await client.api.subscriptions.portal.$post();
 
       if (!response.ok) {
-        throw new Error("Failed to create portal session");
+        const errorData = await response.json() as any;
+        throw new Error(errorData.error || "Failed to create portal session");
       }
 
       const { url } = await response.json();
@@ -62,6 +63,10 @@ export const useCreatePortal = () => {
       if (url) {
         window.location.href = url;
       }
+    },
+    onError: (error) => {
+      console.error("Portal creation error:", error);
+      // You can add toast notification here if needed
     },
   });
 };
