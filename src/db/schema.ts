@@ -171,7 +171,6 @@ export const recipesRelations = relations(recipes, ({ one }) => ({
   }),
 }));
 
-// Stripe Subscriptions
 export const subscriptions = pgTable("subscription", {
   id: serial("id").primaryKey(),
   userId: text("userId")
@@ -183,7 +182,6 @@ export const subscriptions = pgTable("subscription", {
   customerId: text("customerId").notNull(),
   priceId: text("priceId").notNull(),
   status: text("status").notNull(), // active, canceled, past_due, etc.
-  currentPeriodEnd: timestamp("currentPeriodEnd", { mode: "date" }),
   createdAt: timestamp("createdAt", { mode: "date" }).notNull(),
   updatedAt: timestamp("updatedAt", { mode: "date" }).notNull(),
 });

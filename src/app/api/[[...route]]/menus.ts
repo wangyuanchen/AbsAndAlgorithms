@@ -51,11 +51,10 @@ const app = new Hono()
         .eq('userId', userId)
         .single();
 
+      const activeStatuses = ['active', 'trialing'];
       const hasActiveSubscription = 
         userSubscription &&
-        userSubscription.status === "active" &&
-        userSubscription.currentPeriodEnd &&
-        new Date(userSubscription.currentPeriodEnd).getTime() > Date.now();
+        activeStatuses.includes(userSubscription.status);
 
       if (!hasActiveSubscription) {
         return c.json({ 

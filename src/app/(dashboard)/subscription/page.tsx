@@ -91,12 +91,8 @@ export default function SubscriptionPage() {
   }
 
   if (subscriptionData?.isSubscribed) {
-    const periodEnd = subscriptionData && 'currentPeriodEnd' in subscriptionData && subscriptionData.currentPeriodEnd
-      ? new Date(subscriptionData.currentPeriodEnd)
-      : null;
-    
     const subscriptionId = subscriptionData && 'subscriptionId' in subscriptionData 
-      ? subscriptionData.subscriptionId 
+      ? String(subscriptionData.subscriptionId)
       : '';
 
     return (
@@ -118,24 +114,11 @@ export default function SubscriptionPage() {
                 <span className="font-semibold">Status: Active</span>
               </div>
               
-              {periodEnd && (
-                <div className="text-sm text-gray-700">
-                  <span className="font-semibold">Next billing date:</span>
-                  <div className="text-lg font-bold text-green-700 mt-1">
-                    {periodEnd.toLocaleDateString('en-US', { 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {subscriptionId && (
+              {subscriptionId && subscriptionId !== '' && (
                 <div className="text-sm text-gray-600">
                   <span className="font-semibold">Subscription ID:</span>
                   <div className="font-mono text-xs mt-1">
-                    {subscriptionId}
+                    {subscriptionId.toString()}
                   </div>
                 </div>
               )}

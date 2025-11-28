@@ -197,15 +197,12 @@ const app = new Hono()
         }
 
         const activeStatuses = ['active', 'trialing'];
-        const isActive = activeStatuses.includes(userSubscription.status) && 
-                        userSubscription.currentPeriodEnd &&
-                        new Date(userSubscription.currentPeriodEnd).getTime() > Date.now();
+        const isActive = activeStatuses.includes(userSubscription.status);
 
         return c.json({
           data: {
             isSubscribed: isActive,
             status: userSubscription.status,
-            currentPeriodEnd: userSubscription.currentPeriodEnd,
             customerId: userSubscription.customerId,
             subscriptionId: userSubscription.subscriptionId,
             priceId: userSubscription.priceId,
@@ -281,7 +278,6 @@ const app = new Hono()
                   customerId: subscription.customer as string,
                   subscriptionId: subscription.id,
                   priceId: subscription.items.data[0].price.id,
-                  currentPeriodEnd: currentPeriodEnd,
                   status: subscription.status,
                   updatedAt: new Date().toISOString(),
                 };
@@ -366,7 +362,6 @@ const app = new Hono()
                   customerId: subscription.customer as string,
                   subscriptionId: subscription.id,
                   priceId: subscription.items.data[0].price.id,
-                  currentPeriodEnd: currentPeriodEnd,
                   status: subscription.status,
                   updatedAt: new Date().toISOString(),
                 };
@@ -452,7 +447,6 @@ const app = new Hono()
                   customerId: subscription.customer as string,
                   subscriptionId: subscription.id,
                   priceId: subscription.items.data[0].price.id,
-                  currentPeriodEnd: currentPeriodEnd,
                   status: subscription.status, // 通常是 past_due 或 unpaid
                   updatedAt: new Date().toISOString(),
                 };
@@ -525,7 +519,6 @@ const app = new Hono()
               customerId: subscription.customer,
               subscriptionId: subscription.id,
               priceId: subscription.items?.data?.[0]?.price?.id || '',
-              currentPeriodEnd: currentPeriodEnd,
               status: subscription.status,
               updatedAt: new Date().toISOString(),
             };
